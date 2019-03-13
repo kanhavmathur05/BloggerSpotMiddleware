@@ -12,14 +12,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import com.collaborationproject.model.Error;
-import com.collaborationproject.dao.FriendsDAO;
 import com.collaborationproject.model.Friends;
 import com.collaborationproject.model.UserDetails;
+import com.collaborationproject.service.FriendsService;
 
 @RestController
 public class FriendsController {
 	@Autowired
-	FriendsDAO friendsDAO;
+	FriendsService friendsService;
 	
 	@RequestMapping(value="/getSuggestedFriends",method=RequestMethod.GET)
 	public ResponseEntity<?> getSuggestedFriends(HttpSession session){
@@ -28,7 +28,7 @@ public class FriendsController {
     		Error error=new Error(5,"Unauthorized User!!");
     		return new ResponseEntity<Error>(error,HttpStatus.UNAUTHORIZED);
     	}
-		List<UserDetails> list=friendsDAO.getSuggestedFriends(userName);
+		List<UserDetails> list=friendsService.getSuggestedFriends(userName);
 		return new ResponseEntity<List<UserDetails>>(list,HttpStatus.OK);	
 	}
 	
@@ -40,14 +40,14 @@ public class FriendsController {
     		return new ResponseEntity<Error>(error,HttpStatus.UNAUTHORIZED);
     	}
 		try{
-			Friends friend=friendsDAO.getFriend(toId, userName);
+			Friends friend=friendsService.getFriend(toId, userName);
 			if(friend==null){
 				friend=new Friends();
 				friend.setToID(toId);
 				friend.setFromID(userName);
 			}
 			friend.setStatus('P');
-			friendsDAO.addOrUpdateFriend(friend);
+			friendsService.addOrUpdateFriend(friend);
 			return new ResponseEntity<Void>(HttpStatus.OK);
 	    }
 		catch(Exception e){
@@ -64,7 +64,7 @@ public class FriendsController {
     		Error error=new Error(5,"Unauthorized User!!");
     		return new ResponseEntity<Error>(error,HttpStatus.UNAUTHORIZED);
     	}
-		List<UserDetails> list=friendsDAO.getFriendsList(userName);
+		List<UserDetails> list=friendsService.getFriendsList(userName);
 		return new ResponseEntity<List<UserDetails>>(list,HttpStatus.OK);	
 	}
 
@@ -75,7 +75,7 @@ public class FriendsController {
     		Error error=new Error(5,"Unauthorized User!!");
     		return new ResponseEntity<Error>(error,HttpStatus.UNAUTHORIZED);
     	}
-		List<UserDetails> list=friendsDAO.getFriendRequests(userName);
+		List<UserDetails> list=friendsService.getFriendRequests(userName);
 		return new ResponseEntity<List<UserDetails>>(list,HttpStatus.OK);	
 	}
 
@@ -86,7 +86,7 @@ public class FriendsController {
     		Error error=new Error(5,"Unauthorized User!!");
     		return new ResponseEntity<Error>(error,HttpStatus.UNAUTHORIZED);
     	}
-		List<UserDetails> list=friendsDAO.getSentRequests(userName);
+		List<UserDetails> list=friendsService.getSentRequests(userName);
 		return new ResponseEntity<List<UserDetails>>(list,HttpStatus.OK);	
 	}
 
@@ -98,11 +98,11 @@ public class FriendsController {
     		return new ResponseEntity<Error>(error,HttpStatus.UNAUTHORIZED);
     	}
 		try{
-		Friends friend=friendsDAO.getFriend(userName,id);
+		Friends friend=friendsService.getFriend(userName,id);
 		if(friend==null||friend.getStatus()=='R')
-			friend=friendsDAO.getFriend(id,userName);
+			friend=friendsService.getFriend(id,userName);
 		friend.setStatus(status);
-		friendsDAO.addOrUpdateFriend(friend);
+		friendsService.addOrUpdateFriend(friend);
 		return new ResponseEntity<Void>(HttpStatus.OK);
     	}
 		catch(Exception e){
@@ -119,9 +119,9 @@ public class FriendsController {
     		Error error=new Error(5,"Unauthorized User!!");
     		return new ResponseEntity<Error>(error,HttpStatus.UNAUTHORIZED);
     	}
-		Friends friend=friendsDAO.getFriend(userName,id);
+		Friends friend=friendsService.getFriend(userName,id);
 		if(friend==null||friend.getStatus()=='R')
-			friend=friendsDAO.getFriend(id,userName);
+			friend=friendsService.getFriend(id,userName);
 		return new ResponseEntity<Friends>(friend,HttpStatus.OK);
     }
 

@@ -13,13 +13,13 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import com.collaborationproject.model.Error;
-import com.collaborationproject.dao.ProfilePictureDAO;
 import com.collaborationproject.model.ProfilePicture;
+import com.collaborationproject.service.ProfilePictureService;
 
 @RestController
 public class ProfilePictureController {
 	@Autowired
-	ProfilePictureDAO profilePictureDAO;
+	ProfilePictureService profilePictureService;
 	
 	@RequestMapping(value="/addProfilePicture",method=RequestMethod.POST)
 	public ResponseEntity<?> addProfilePicture(@RequestParam  MultipartFile image,HttpSession session){
@@ -32,7 +32,7 @@ public class ProfilePictureController {
 			ProfilePicture profilePicture=new ProfilePicture();
 			profilePicture.setUsername(userName);
 			profilePicture.setImage(image.getBytes());
-			profilePictureDAO.insertOrUpdateProfilePicture(profilePicture);
+			profilePictureService.insertOrUpdateProfilePicture(profilePicture);
 			return new ResponseEntity<ProfilePicture>(profilePicture,HttpStatus.OK);
     	}
 		catch(Exception e){
@@ -44,7 +44,7 @@ public class ProfilePictureController {
 
 	@RequestMapping(value="/getProfilePicture/{userName}",method=RequestMethod.GET)
 	public @ResponseBody byte[] getProfilePicture(@PathVariable String userName){
-			ProfilePicture profilePicture=profilePictureDAO.getProfilePicture(userName);
+			ProfilePicture profilePicture=profilePictureService.getProfilePicture(userName);
 			if(profilePicture==null)
 				return null;
 			return profilePicture.getImage();

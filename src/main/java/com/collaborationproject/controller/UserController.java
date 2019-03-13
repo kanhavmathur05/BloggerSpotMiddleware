@@ -11,14 +11,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.collaborationproject.dao.UserDetailsDAO;
 import com.collaborationproject.model.UserDetails;
+import com.collaborationproject.service.UserDetailsService;
 import com.collaborationproject.model.Error;
 
 @RestController
 public class UserController {
 	@Autowired
-	private UserDetailsDAO userDetailsDAO;
+	private UserDetailsService userDetailsService;
 	/*@Autowired
 	private SockController sockController;*/
 	
@@ -26,13 +26,13 @@ public class UserController {
 	public ResponseEntity<?> registerUser(@RequestBody UserDetails userDetails){
     	try{
     		System.out.print(userDetails.getUserName());
-    		UserDetails duplicateUserDetails=userDetailsDAO.getUserDetails(userDetails.getUserName());
+    		UserDetails duplicateUserDetails=userDetailsService.getUserDetails(userDetails.getUserName());
     	if(duplicateUserDetails!=null){
     		System.out.print(2);
     		Error error=new Error(2,"Username already exists!!");
     		return new ResponseEntity<Error>(error,HttpStatus.NOT_ACCEPTABLE);
     	}
-    	duplicateUserDetails=userDetailsDAO.getUserDetailsByEmail(userDetails.getEmail());
+    	duplicateUserDetails=userDetailsService.getUserDetailsByEmail(userDetails.getEmail());
     	if(duplicateUserDetails!=null){
     		System.out.print(3);
     		Error error=new Error(3,"Email address already exists!!");
@@ -40,7 +40,7 @@ public class UserController {
     	}
     	System.out.print(5);
     	userDetails.setOnlineStatus(false);
-    	userDetailsDAO.insertOrUpdateUserDetails(userDetails);
+    	userDetailsService.insertOrUpdateUserDetails(userDetails);
 		return new ResponseEntity<UserDetails>(userDetails,HttpStatus.OK);
     	}catch(Exception e){
     		System.out.print(e);
@@ -51,13 +51,13 @@ public class UserController {
 
 	@RequestMapping(value="/login",method=RequestMethod.POST)
     public ResponseEntity<?> login(@RequestBody UserDetails userDetails,HttpSession session){
-    	UserDetails validUserDetails=userDetailsDAO.login(userDetails);
+    	UserDetails validUserDetails=userDetailsService.login(userDetails);
     	if(validUserDetails==null){
     		Error error=new Error(4,"Invalid username or password!!");
     		return new ResponseEntity<Error>(error,HttpStatus.UNAUTHORIZED);
     	}
     	validUserDetails.setOnlineStatus(true);
-    	userDetailsDAO.insertOrUpdateUserDetails(validUserDetails);
+    	userDetailsService.insertOrUpdateUserDetails(validUserDetails);
     	session.setAttribute("username", validUserDetails.getUserName());
     	session.setAttribute("role", validUserDetails.getRole());
     	return new ResponseEntity<UserDetails>(validUserDetails,HttpStatus.OK);
@@ -70,9 +70,9 @@ public class UserController {
     		return new ResponseEntity<Error>(error,HttpStatus.UNAUTHORIZED);
     	}
     	String userName=(String)session.getAttribute("userName");
-    	UserDetails userDetails=userDetailsDAO.getUserDetails(userName);
+    	UserDetails userDetails=userDetailsService.getUserDetails(userName);
     	userDetails.setOnlineStatus(false);
-    	userDetailsDAO.insertOrUpdateUserDetails(userDetails);
+    	userDetailsService.insertOrUpdateUserDetails(userDetails);
     	//sockController.onLogout(userName);
     	session.removeAttribute("userName");
     	session.invalidate();
@@ -85,7 +85,7 @@ public class UserController {
     		Error error=new Error(5,"Unauthorized User!!");
     		return new ResponseEntity<Error>(error,HttpStatus.UNAUTHORIZED);
     	}
-    	UserDetails userDetails=userDetailsDAO.getUserDetails(userName);
+    	UserDetails userDetails=userDetailsService.getUserDetails(userName);
     	return new ResponseEntity<UserDetails>(userDetails,HttpStatus.OK);
 	}
 	@RequestMapping(value="/updateUser",method=RequestMethod.POST)
@@ -94,14 +94,14 @@ public class UserController {
     		Error error=new Error(5,"Unauthorized User!!");
     		return new ResponseEntity<Error>(error,HttpStatus.UNAUTHORIZED);
     	}
-		if(!userDetailsDAO.getUserDetails(userDetails.getUserName()).getEmail().equals(userDetails.getEmail()))
-			if(userDetailsDAO.getUserDetailsByEmail(userDetails.getEmail())!=null){
+		if(!userDetailsService.getUserDetails(userDetails.getUserName()).getEmail().equals(userDetails.getEmail()))
+			if(userDetailsService.getUserDetailsByEmail(userDetails.getEmail())!=null){
 				Error error=new Error(3,"Email address already exists!!");
 				return new ResponseEntity<Error>(error,HttpStatus.NOT_ACCEPTABLE);
 			}
 		try{
     	userDetails.setOnlineStatus(true);
-    	userDetailsDAO.insertOrUpdateUserDetails(userDetails);
+    	userDetailsService.insertOrUpdateUserDetails(userDetails);
 		return new ResponseEntity<UserDetails>(userDetails,HttpStatus.OK);
     	}catch(Exception e){
     		System.out.print(e);

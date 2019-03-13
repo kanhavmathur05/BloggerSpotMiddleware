@@ -14,17 +14,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import com.collaborationproject.model.Error;
-import com.collaborationproject.dao.JobDAO;
-import com.collaborationproject.dao.UserDetailsDAO;
 import com.collaborationproject.model.ApplyForJob;
 import com.collaborationproject.model.Job;
+import com.collaborationproject.service.JobService;
+import com.collaborationproject.service.UserDetailsService;
 
 @RestController
 public class JobController {
 	@Autowired
-	private JobDAO jobDAO;
+	private JobService jobService;
 	@Autowired
-	private UserDetailsDAO userDetailsDAO;
+	private UserDetailsService userDetailsService;
 	
 	@RequestMapping(value="/addJob",method=RequestMethod.POST)
 	public ResponseEntity<?> addJob(@RequestBody Job job,HttpSession session){
@@ -38,7 +38,7 @@ public class JobController {
 	    		return new ResponseEntity<Error>(error,HttpStatus.UNAUTHORIZED);	
 			}
 			job.setPostedOn(new Date());
-			jobDAO.insertOrUpdateJob(job);
+			jobService.insertOrUpdateJob(job);
 			return new ResponseEntity<Void>(HttpStatus.OK);
     	}catch(Exception e){
     		System.out.print(e);
@@ -58,7 +58,7 @@ public class JobController {
 				Error error=new Error(6,"Unauthorized User!!");
 	    		return new ResponseEntity<Error>(error,HttpStatus.UNAUTHORIZED);	
 			}
-			jobDAO.deleteJob(jobDAO.getJobById(id));
+			jobService.deleteJob(jobService.getJobById(id));
 			return new ResponseEntity<Void>(HttpStatus.OK);
     	}catch(Exception e){
     		System.out.print(e);
@@ -69,13 +69,13 @@ public class JobController {
 	
 	@RequestMapping(value="/getJobById/{id}",method=RequestMethod.GET)
 	public ResponseEntity<?> getJobById(@PathVariable int id){
-		Job job=jobDAO.getJobById(id);
+		Job job=jobService.getJobById(id);
 		return new ResponseEntity<Job>(job,HttpStatus.OK);	
 	}
 	
 	@RequestMapping(value="/getAllJobs",method=RequestMethod.GET)
 	public ResponseEntity<?> getAllJobs(){
-		List<Job> list=jobDAO.getJob();
+		List<Job> list=jobService.getJob();
 		return new ResponseEntity<List<Job>>(list,HttpStatus.OK);	
 	}
 
@@ -87,14 +87,14 @@ public class JobController {
 	    		Error error=new Error(5,"Unauthorized User!!");
 	    		return new ResponseEntity<Error>(error,HttpStatus.UNAUTHORIZED);
 	    	}
-			if(jobDAO.checkIfApplied(jobId, userName)){
+			if(jobService.checkIfApplied(jobId, userDetailsService.getUserDetails(userName))){
 	    		Error error=new Error(8,"Not allowed to apply again!!");
 	    		return new ResponseEntity<Error>(error,HttpStatus.ALREADY_REPORTED);
 	    	}
 			ApplyForJob applyForJob=new ApplyForJob();
 			applyForJob.setAppliedFor(jobId);
-			applyForJob.setAppliedBy(userDetailsDAO.getUserDetails(userName));
-			jobDAO.applyForJob(applyForJob);
+			applyForJob.setAppliedBy(userDetailsService.getUserDetails(userName));
+			jobService.applyForJob(applyForJob);
 			return new ResponseEntity<Void>(HttpStatus.OK);
     	}catch(Exception e){
     		System.out.print(e);
@@ -113,7 +113,7 @@ public class JobController {
 			Error error=new Error(6,"Unauthorized User!!");
     		return new ResponseEntity<Error>(error,HttpStatus.UNAUTHORIZED);	
 		}
-		List<ApplyForJob> list=jobDAO.getAllAppliedUser(jobId);
+		List<ApplyForJob> list=jobService.getAllAppliedUser(jobId);
 		return new ResponseEntity<List<ApplyForJob>>(list,HttpStatus.OK);	
 	}
 	
@@ -125,7 +125,7 @@ public class JobController {
 	    		Error error=new Error(5,"Unauthorized User!!");
 	    		return new ResponseEntity<Error>(error,HttpStatus.UNAUTHORIZED);
 	    	}
-			return new ResponseEntity<Boolean>(jobDAO.checkIfApplied(jobId, userName),HttpStatus.OK);
+			return new ResponseEntity<Boolean>(jobService.checkIfApplied(jobId,userDetailsService.getUserDetails(userName)),HttpStatus.OK);
     	}catch(Exception e){
     		System.out.print(e);
     		Error error=new Error(1,"Unable to check!!");

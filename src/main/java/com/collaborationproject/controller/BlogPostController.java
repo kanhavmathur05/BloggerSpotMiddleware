@@ -19,22 +19,22 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import com.collaborationproject.model.Error;
-import com.collaborationproject.dao.BlogPostDAO;
-import com.collaborationproject.dao.UserDetailsDAO;
 import com.collaborationproject.model.BlogComment;
 import com.collaborationproject.model.BlogPost;
 import com.collaborationproject.model.UserDetails;
+import com.collaborationproject.service.BlogPostService;
+import com.collaborationproject.service.UserDetailsService;
 
 @RestController
 public class BlogPostController {
 	@Autowired
-	BlogPostDAO blogPostDAO;
+	BlogPostService blogPostService;
 	@Autowired
-	UserDetailsDAO userDetailsDAO;
+	UserDetailsService userDetailsService;
 	private int blogID;
 	@RequestMapping(value="/addBlogPost",method=RequestMethod.POST)
 	public ResponseEntity<?> addBlogPost(@RequestBody BlogPost blogPost,HttpSession session){
-		UserDetails user=userDetailsDAO.getUserDetails((String)session.getAttribute("userName"));
+		UserDetails user=userDetailsService.getUserDetails((String)session.getAttribute("userName"));
 		if(user==null){
 			Error error=new Error(5,"Unauthorized User!!");
     		return new ResponseEntity<Error>(error,HttpStatus.UNAUTHORIZED);
@@ -46,7 +46,7 @@ public class BlogPostController {
 				blogPost.setApproved("A");
 			blogPost.setPostedOn(new Date());
 			blogPost.setPostedBy(user);
-			blogPostDAO.insertOrUpdateBlogPost(blogPost);
+			blogPostService.insertOrUpdateBlogPost(blogPost);
 			blogID=blogPost.getBlogID();
 			return new ResponseEntity<Void>(HttpStatus.OK);
 	    }
@@ -62,21 +62,21 @@ public class BlogPostController {
     		Error error=new Error(5,"Unauthorized User!!");
     		return new ResponseEntity<Error>(error,HttpStatus.UNAUTHORIZED);
     	}*/
-		List<BlogPost> list=blogPostDAO.getBlogPosts(approved);
+		List<BlogPost> list=blogPostService.getBlogPosts(approved);
 		//System.out.println(list.size());
 		return new ResponseEntity<List<BlogPost>>(list,HttpStatus.OK);	
 	}
 	
 	@RequestMapping(value="/getAllBlogPostByUser/{userName}",method=RequestMethod.GET)
 	public ResponseEntity<?> getAllBlogPostByUser(@PathVariable String userName){
-		UserDetails user=userDetailsDAO.getUserDetails(userName);
-		List<BlogPost> list=blogPostDAO.getBlogPostsByUser(user);
+		UserDetails user=userDetailsService.getUserDetails(userName);
+		List<BlogPost> list=blogPostService.getBlogPostsByUser(user);
 		return new ResponseEntity<List<BlogPost>>(list,HttpStatus.OK);	
 	}
 
 	@RequestMapping(value="/getBlogPostById/{id}",method=RequestMethod.GET)
 	public ResponseEntity<?> getBlogPostById(@PathVariable int id){
-		BlogPost blogPost=blogPostDAO.getBlogPostById(id);
+		BlogPost blogPost=blogPostService.getBlogPostById(id);
 		return new ResponseEntity<BlogPost>(blogPost,HttpStatus.OK);	
 	}
 	
@@ -91,9 +91,9 @@ public class BlogPostController {
 				Error error=new Error(6,"Unauthorized User!!");
 	    		return new ResponseEntity<Error>(error,HttpStatus.UNAUTHORIZED);	
 			}
-			BlogPost blogPost=blogPostDAO.getBlogPostById(id);
+			BlogPost blogPost=blogPostService.getBlogPostById(id);
 			blogPost.setApproved("A");
-			blogPostDAO.insertOrUpdateBlogPost(blogPost);
+			blogPostService.insertOrUpdateBlogPost(blogPost);
 			return new ResponseEntity<Void>(HttpStatus.OK);
 		}
 		catch(Exception e){
@@ -113,9 +113,9 @@ public class BlogPostController {
 				Error error=new Error(6,"Unauthorized User!!");
 	    		return new ResponseEntity<Error>(error,HttpStatus.UNAUTHORIZED);	
 			}
-			BlogPost blogPost=blogPostDAO.getBlogPostById(id);
+			BlogPost blogPost=blogPostService.getBlogPostById(id);
 			blogPost.setApproved("R");
-			blogPostDAO.insertOrUpdateBlogPost(blogPost);
+			blogPostService.insertOrUpdateBlogPost(blogPost);
 			return new ResponseEntity<Void>(HttpStatus.OK);
 		}
 		catch(Exception e){
@@ -131,9 +131,9 @@ public class BlogPostController {
 	    		Error error=new Error(5,"Unauthorized User!!");
 	    		return new ResponseEntity<Error>(error,HttpStatus.UNAUTHORIZED);
 	    	}
-			BlogPost blogPost=blogPostDAO.getBlogPostById(id);
+			BlogPost blogPost=blogPostService.getBlogPostById(id);
 			if(blogPost.getPostedBy().getUserName().equals(session.getAttribute("userName"))){
-			blogPostDAO.deleteBlogPost(blogPost);
+			blogPostService.deleteBlogPost(blogPost);
 			return new ResponseEntity<Void>(HttpStatus.OK);
 			}
 			else{
@@ -155,10 +155,10 @@ public class BlogPostController {
 	    		return new ResponseEntity<Error>(error,HttpStatus.UNAUTHORIZED);
 	    	}
 			try{
-				UserDetails user=userDetailsDAO.getUserDetails(userName);
+				UserDetails user=userDetailsService.getUserDetails(userName);
 				blogComment.setCommentedBy(user);
 				blogComment.setCommentedOn(new Date());
-				blogPostDAO.addBlogComment(blogComment);
+				blogPostService.addBlogComment(blogComment);
 				return new ResponseEntity<Void>(HttpStatus.OK);
 			}
 			catch(Exception e){	
@@ -169,7 +169,7 @@ public class BlogPostController {
 
 	@RequestMapping(value="/getAllBlogComment/{blogID}",method=RequestMethod.GET)
 	public ResponseEntity<?> getAllBlogComment(@PathVariable int blogID){
-	List<BlogComment> list=blogPostDAO.getAllBlogComment(blogPostDAO.getBlogPostById(blogID));
+	List<BlogComment> list=blogPostService.getAllBlogComment(blogPostService.getBlogPostById(blogID));
 	return new ResponseEntity<List<BlogComment>>(list,HttpStatus.OK);	
 	}
 	
