@@ -169,7 +169,7 @@ public class BlogPostController {
 
 	@RequestMapping(value="/getAllBlogComment/{blogID}",method=RequestMethod.GET)
 	public ResponseEntity<?> getAllBlogComment(@PathVariable int blogID){
-	List<BlogComment> list=blogPostDAO.getAllBlogComment(blogID);
+	List<BlogComment> list=blogPostDAO.getAllBlogComment(blogPostDAO.getBlogPostById(blogID));
 	return new ResponseEntity<List<BlogComment>>(list,HttpStatus.OK);	
 	}
 	
