@@ -5,6 +5,7 @@ import javax.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,7 +17,11 @@ import com.collaborationproject.service.UserDetailsService;
 import com.collaborationproject.model.Error;
 
 @RestController
+@CrossOrigin("http://localhost:4200")
 public class UserController {
+	
+	//public HttpSession session;
+	
 	@Autowired
 	private UserDetailsService userDetailsService;
 	/*@Autowired
@@ -39,6 +44,7 @@ public class UserController {
     		return new ResponseEntity<Error>(error,HttpStatus.NOT_ACCEPTABLE);
     	}
     	System.out.print(5);
+    	userDetails.setRole("ROLE_USER");
     	userDetails.setOnlineStatus(false);
     	userDetailsService.insertOrUpdateUserDetails(userDetails);
 		return new ResponseEntity<UserDetails>(userDetails,HttpStatus.OK);
@@ -58,8 +64,12 @@ public class UserController {
     	}
     	validUserDetails.setOnlineStatus(true);
     	userDetailsService.insertOrUpdateUserDetails(validUserDetails);
-    	session.setAttribute("username", validUserDetails.getUserName());
-    	session.setAttribute("role", validUserDetails.getRole());
+    	//this.session.setAttribute("user",validUserDetails.getUserName());
+    	session.setAttribute("userName", validUserDetails.getUserName());
+    	//this.session.setAttribute("role", validUserDetails.getRole());
+    	
+    	System.out.println("Username in session variable:"+session.getAttribute("userName"));
+    	
     	return new ResponseEntity<UserDetails>(validUserDetails,HttpStatus.OK);
     }
  
@@ -74,10 +84,12 @@ public class UserController {
     	userDetails.setOnlineStatus(false);
     	userDetailsService.insertOrUpdateUserDetails(userDetails);
     	//sockController.onLogout(userName);
+    	System.out.println("UserName::"+session.getAttribute("userName"));
     	session.removeAttribute("userName");
+    	System.out.println("UserName::"+session.getAttribute("userName"));
     	session.invalidate();
     	return new ResponseEntity<Void>(HttpStatus.OK);
-    }
+    }	
 	
 	@RequestMapping(value="/getUser/{userName}",method=RequestMethod.GET)
     public ResponseEntity<?> getUserDetails(HttpSession session,@PathVariable String userName){

@@ -11,6 +11,7 @@ import javax.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,24 +27,33 @@ import com.collaborationproject.service.BlogPostService;
 import com.collaborationproject.service.UserDetailsService;
 
 @RestController
+@CrossOrigin("http://localhost:4200")
 public class BlogPostController {
+	
 	@Autowired
-	BlogPostService blogPostService;
+	BlogPostService blogPostService;	
 	@Autowired
 	UserDetailsService userDetailsService;
 	private int blogID;
 	@RequestMapping(value="/addBlogPost",method=RequestMethod.POST)
-	public ResponseEntity<?> addBlogPost(@RequestBody BlogPost blogPost,HttpSession session){
-		UserDetails user=userDetailsService.getUserDetails((String)session.getAttribute("userName"));
+	public ResponseEntity<?> addBlogPost(@RequestBody BlogPost blogPost){
+		//UserDetails user=userDetailsService.getUserDetails((String)session.getAttribute("userName"));
+		UserDetails user=blogPost.getPostedBy();
 		if(user==null){
 			Error error=new Error(5,"Unauthorized User!!");
     		return new ResponseEntity<Error>(error,HttpStatus.UNAUTHORIZED);
     	}
 		try{
 			if(blogPost.getBlogID()==0)
+			{
 				blogPost.setApproved("NA");
-			if(session.getAttribute("role").equals("admin"))
+			}
+			//if(session.getAttribute("role").equals("admin"))
+			//	blogPost.setApproved("A");
+			if(user.getRole().equals("ROLE_ADMIN"))
+			{
 				blogPost.setApproved("A");
+			}
 			blogPost.setPostedOn(new Date());
 			blogPost.setPostedBy(user);
 			blogPostService.insertOrUpdateBlogPost(blogPost);
@@ -53,8 +63,8 @@ public class BlogPostController {
 		catch(Exception e){
 			Error error=new Error(1,"Unable to add BlogPost!!");
     		return new ResponseEntity<Error>(error,HttpStatus.INTERNAL_SERVER_ERROR);	
-		}			
-	}
+		}		
+		}
 	
 	@RequestMapping(value="/getAllBlogPost/{approved}",method=RequestMethod.GET)
 	public ResponseEntity<?> getAllBlogPost(@PathVariable String approved,HttpSession session){
